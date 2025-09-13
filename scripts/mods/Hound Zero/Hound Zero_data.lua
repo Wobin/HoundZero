@@ -1,7 +1,7 @@
 local mod = get_mod("Hound Zero")
 
 return {
-	name = "Hound Zero",
+	name = mod:Localize("mod_name"),
 	description = mod:localize("mod_description"),
 	is_togglable = true,
 	options = {
