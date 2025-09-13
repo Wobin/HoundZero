@@ -1,0 +1,21 @@
+local mod = get_mod("Hound Zero")
+
+return {
+	name = "Hound Zero",
+	description = mod:localize("mod_description"),
+	is_togglable = true,
+	options = {
+		widgets = {
+			{
+				setting_id = "show_outline",			
+				type = "checkbox",
+				default_value = true,
+			},
+			{
+				setting_id = "show_zone",			
+				type = "checkbox",
+				default_value = true,
+			},
+		},
+	},
+}
