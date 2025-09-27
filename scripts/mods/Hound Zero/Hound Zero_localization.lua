@@ -14,5 +14,9 @@ return {
 	show_zone = {
 		en = "Place a circle around your hound indicating range",
 		["zh-cn"] = "在猎犬周围显示范围指示圈"
+	},
+	show_while_charged = {
+		en = "Always show while a Remote Detonation charge exists"
 	}
+
 }

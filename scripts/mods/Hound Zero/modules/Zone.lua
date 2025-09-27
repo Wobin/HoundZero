@@ -8,6 +8,9 @@ local Unit = Unit
 local World = World
 local Vector3 = Vector3
 local Quaternion = Quaternion
+local HEALTH_ALIVE = HEALTH_ALIVE
+local is_valid = Unit.is_valid
+
 
 mod.init_zone = function(has_loaded)
     if not package:has_loaded(package_path) and not has_loaded then
@@ -21,8 +24,15 @@ end
 
 mod.manage_zone = function()
     if not mod.hound or not mod.zone_loaded then return end
+    if not HEALTH_ALIVE[mod.hound] or not is_valid(mod.hound) then
+        mod.get_dog()
+    end
     if mod.decal then mod.remove_zone() end
-
+    if not is_valid(mod.hound) then
+        mod.hound = nil
+        return
+    end
+    
     local unit = mod.hound
     local world = Unit.world(unit)
 	local unit_position = Unit.local_position(unit, 1)
@@ -44,11 +54,13 @@ mod.manage_zone = function()
 	Unit.set_scalar_for_material(decal_unit, "projector", "color_multiplier", 0.5)
     
 	mod.decal = decal_unit 
+    mod.zoned = true    
 end
 
 mod.remove_zone = function()    
-   if mod.decal then
+   if mod.decal and is_valid(mod.decal)  then
         World.destroy_unit(Unit.world(mod.decal), mod.decal)                 
-        mod.decal = nil
+        mod.decal = nil        
     end
+    mod.zoned = false
 end

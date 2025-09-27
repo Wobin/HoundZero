@@ -1,7 +1,7 @@
 local mod = get_mod("Hound Zero")
 
 return {
-	name = mod:Localize("mod_name"),
+	name = mod:localize("mod_name"),
 	description = mod:localize("mod_description"),
 	is_togglable = true,
 	options = {
@@ -16,6 +16,12 @@ return {
 				type = "checkbox",
 				default_value = true,
 			},
+			{
+				setting_id = "show_while_charged",			
+				type = "checkbox",
+				default_value = false,
+			},
+			
 		},
 	},
 }

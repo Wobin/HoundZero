@@ -1,10 +1,10 @@
 -- Mod: Hound Zero
 -- Author: Wobin
--- Date: 14/09/2025
--- Version: 1.1
+-- Date: 27/09/2025
+-- Version: 1.4
 
 local mod = get_mod("Hound Zero")
-mod.version = "1.1"
+mod.version = "1.4"
 
 local Unit = Unit
 local table = table
@@ -73,9 +73,13 @@ end
 
 mod.init = function()    
      game_mode_manager = Managers.state.game_mode			
-    if game_mode_manager then        
+    if game_mode_manager then   
 	    if acceptable_locations[game_mode_manager:game_mode_name()] then
+            mod.correct_area = true
             delay(3):next(retrieve_profile):next(mod.get_dog):next(mod.init_zone)
+        else
+            mod.correct_area = false
+            mod.on_unload()
         end
     end
 end
@@ -94,6 +98,14 @@ local getRadius = function()
     end
 end
 
+mod.hasCharges = function()
+    if not mod:get("show_while_charged")  or not mod.player then return false end
+    local ability_system = mod.player and extension(mod.player.player_unit, "ability_system")
+	return ability_system and 
+            ability_system:remaining_ability_charges("grenade_ability") > 0
+        or false    
+end
+
 mod:hook_safe(CLASS.InventoryBackgroundView, "on_exit", function()
     delay(3):next(retrieve_profile)
 end)
@@ -105,16 +117,30 @@ local manage_outlines = mod.manage_outlines
 local manage_zone = mod.manage_zone
 local delta = 0
 
+
 mod.update = function(dt)    
-    if mod:get("show_outline") and mod.player and mod.aiming and mod.hound then
-        if delta > 0.5 and Unit.is_valid(mod.hound) then 
-            delta = 0
-            local dog_position = unitLocalPosition(mod.hound, 1)        
-            local enemies = find_enemies_in_radius(dog_position, mod.radius)                     
-            manage_outlines(enemies)
-        else
-            delta = delta + dt
+    if not mod.correct_area then return end
+    if delta > 0.5 then
+        if not mod.radius then getRadius() end
+        if mod:get("show_outline") and mod.player and 
+            (mod.aiming or mod.hasCharges()) 
+            and mod.hound then
+            if  Unit.is_valid(mod.hound) then        
+                local dog_position = unitLocalPosition(mod.hound, 1)        
+                local enemies = find_enemies_in_radius(dog_position, mod.radius)                     
+                manage_outlines(enemies)
+            end
         end
+        if not mod.zoned then
+            if mod:get("show_zone") and mod:get("show_while_charged") and mod.hasCharges() then
+                manage_zone()
+            end
+        else
+            if not mod.hasCharges() then mod.remove_zone() end
+        end
+        delta = 0
+    else
+        delta = delta + dt
     end
 end 
 
@@ -123,24 +149,22 @@ actions["action_aim"] = true
 actions["action_order_companion"] = false
 
 
+
 mod:hook_safe(CLASS.ActionHandler, "start_action", function(_, _, _, action_name, _, action_settings)
-    if not mod.player or not (actions[action_name] ~= nil and action_settings.ability_type == "grenade_ability" ) then return end        
-    
-    mod.aiming = actions[action_name]        
-    
-    if not mod.hound and action_name == "action_aim" then
-        mod.get_dog()
-    end        
+    if not mod:get("show_while_charged") then
+        if  not mod.player or not (actions[action_name] ~= nil and action_settings.ability_type == "grenade_ability" ) then return end        
+        
+        mod.aiming = actions[action_name]        
+        
+        if not mod.hound and action_name == "action_aim" then
+            mod.get_dog()
+        end        
 
-    getRadius()
-
-    if mod:get("show_zone") then
         manage_zone()
+        if action_name == "action_order_companion" then
+            delay(0.5):next(mod.remove_all_outlines):next(mod.remove_zone)            
+        end            
     end
-
-    if action_name == "action_order_companion" then
-        delay(0.5):next(mod.remove_all_outlines):next(mod.remove_zone)            
-    end            
 end)
 
 mod.get_dog  = function()    

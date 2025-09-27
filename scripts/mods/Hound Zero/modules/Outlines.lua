@@ -34,7 +34,7 @@ mod:hook_require("scripts/settings/outline/outline_settings", function(settings)
             "minion_outline",
 			"minion_outline_reversed_depth",       
         },
-        visibility_check = function() return mod.aiming end
+        visibility_check = function() return mod.aiming or mod.hasCharges() end
     }
 end)
 
