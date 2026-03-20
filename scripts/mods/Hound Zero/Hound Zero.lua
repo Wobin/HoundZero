@@ -169,7 +169,7 @@ end)
 
 mod.get_dog  = function()    
     local companion_spawner_extension = extension(mod.player.player_unit, "companion_spawner_system")
-    local companion_unit = companion_spawner_extension:companion_unit()
+    local companion_unit = companion_spawner_extension._spawned_units and companion_spawner_extension._spawned_units[1] 
 
     if companion_unit then                
         mod.hound = companion_unit                      
