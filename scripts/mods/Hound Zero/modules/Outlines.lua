@@ -16,7 +16,14 @@ local get_outline_system = function()
 end
 
 mod.remove_outline = function(unit)
-        outline_system:remove_outline(unit, tag_colour, true)
+        if outline_system then
+            local ok = pcall(function()
+                outline_system:remove_outline(unit, tag_colour, true)
+            end)
+            if not ok then
+                outline_system = nil
+            end
+        end
         outlined_units[unit] = nil
 end
 
@@ -49,10 +56,16 @@ mod.manage_outlines = function(enemies)
         end
         
         for _, unit in ipairs(enemies) do
-            if not outlined_units[unit] then
-                outline_system:remove_outline(unit, tag_colour)
-                outline_system:add_outline(unit, tag_colour)
-                outlined_units[unit] = true
+            if not outlined_units[unit] and outline_system then
+                local ok = pcall(function()
+                    outline_system:remove_outline(unit, tag_colour)
+                    outline_system:add_outline(unit, tag_colour)
+                end)
+                if ok then
+                    outlined_units[unit] = true
+                else
+                    outline_system = nil
+                end
             end
         end
 end

@@ -1,10 +1,10 @@
 -- Mod: Hound Zero
 -- Author: Wobin
 -- Date: 27/09/2025
--- Version: 1.4
+-- Version: 1.6
 
 local mod = get_mod("Hound Zero")
-mod.version = "1.4"
+mod.version = "1.6"
 
 local Unit = Unit
 local table = table
