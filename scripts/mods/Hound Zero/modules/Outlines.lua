@@ -33,17 +33,32 @@ mod.remove_all_outlines = function()
     end
 end
 
-mod:hook_require("scripts/settings/outline/outline_settings", function(settings)    
+local function outline_colour()
+    return {
+        (mod:get("outline_colour_R") or 0) / 255,
+        (mod:get("outline_colour_G") or 0) / 255,
+        (mod:get("outline_colour_B") or 255) / 255,
+    }
+end
+
+mod:hook_require("scripts/settings/outline/outline_settings", function(settings)
      settings.MinionOutlineExtension.houndzero = {
         priority = 3,
-        color = {0,0,1},
+        color = outline_colour(),
         material_layers = {
             "minion_outline",
-			"minion_outline_reversed_depth",       
+			"minion_outline_reversed_depth",
         },
         visibility_check = function() return mod.aiming or mod.hasCharges() end
     }
+    mod._houndzero_outline_cfg = settings.MinionOutlineExtension.houndzero
 end)
+
+mod.refresh_outline_colour = function()
+    if mod._houndzero_outline_cfg then
+        mod._houndzero_outline_cfg.color = outline_colour()
+    end
+end
 
 mod.manage_outlines = function(enemies)
         outline_system = outline_system or get_outline_system()        

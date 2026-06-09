@@ -47,7 +47,11 @@ mod.manage_zone = function()
 
 	-- Set color of unit
 	local material_value = Quaternion.identity()
-	Quaternion.set_xyzw(material_value, 0, 0, 1, 0.5)
+	Quaternion.set_xyzw(material_value,
+		(mod:get("ring_colour_R") or 0) / 255,
+		(mod:get("ring_colour_G") or 0) / 255,
+		(mod:get("ring_colour_B") or 255) / 255,
+		0.5)
 	Unit.set_vector4_for_material(decal_unit, "projector", "particle_color", material_value, true)
 
 	-- Set low opacity

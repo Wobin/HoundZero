@@ -1,10 +1,10 @@
 -- Mod: Hound Zero
 -- Author: Wobin
--- Date: 27/09/2025
--- Version: 1.6
+-- Date: 08/06/2026
+-- Version: 1.7
 
 local mod = get_mod("Hound Zero")
-mod.version = "1.6"
+mod.version = "1.7"
 
 local Unit = Unit
 local table = table
@@ -26,7 +26,7 @@ local CLASS = CLASS
 mod.player = nil
 
 local function find_enemies_in_radius(center, radius)
-    local state_extension = managers_state.extension or Managers.state.extension
+    local state_extension = managers_state.extension
     local side_system = state_extension:system("side_system")
     local player_side = side_system and side_system:get_side_from_name("heroes")
     if not player_side then return {} end
@@ -53,6 +53,7 @@ local acceptable_locations = {}
 acceptable_locations["coop_complete_objective"] = true
 acceptable_locations["survival"] = true
 acceptable_locations["shooting_range"] = true
+acceptable_locations["expedition"] = true
 
 mod.on_all_mods_loaded = function()    
     mod:info(mod.version)
@@ -62,6 +63,16 @@ end
 mod.on_unload = function(exit_game)
     mod.remove_all_outlines()
     mod.remove_zone()
+end
+
+mod.on_setting_changed = function(setting_id)
+    if not setting_id then return end
+    if setting_id:find("^outline_colour") then
+        if mod.refresh_outline_colour then mod.refresh_outline_colour() end
+        mod.remove_all_outlines()
+    elseif setting_id:find("^ring_colour") then
+        mod.remove_zone()
+    end
 end
 
 mod.on_game_state_changed = function(status, sub_state_name)
