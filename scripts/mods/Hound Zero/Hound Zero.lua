@@ -1,10 +1,13 @@
 -- Mod: Hound Zero
 -- Author: Wobin
--- Date: 08/06/2026
--- Version: 1.7
+-- Date: 11/06/2026
+-- Version: 1.7.1
 
 local mod = get_mod("Hound Zero")
-mod.version = "1.7"
+mod.version = "1.7.1"
+
+mod:io_dofile("Hound Zero/scripts/mods/Hound Zero/modules/Outlines")
+mod:io_dofile("Hound Zero/scripts/mods/Hound Zero/modules/Zone")
 
 local Unit = Unit
 local table = table
@@ -61,8 +64,8 @@ mod.on_all_mods_loaded = function()
 end
 
 mod.on_unload = function(exit_game)
-    mod.remove_all_outlines()
-    mod.remove_zone()
+    if mod.remove_all_outlines then mod.remove_all_outlines() end
+    if mod.remove_zone then mod.remove_zone() end
 end
 
 mod.on_setting_changed = function(setting_id)
@@ -120,9 +123,6 @@ end
 mod:hook_safe(CLASS.InventoryBackgroundView, "on_exit", function()
     delay(3):next(retrieve_profile)
 end)
-
-mod:io_dofile("Hound Zero/scripts/mods/Hound Zero/modules/Outlines")
-mod:io_dofile("Hound Zero/scripts/mods/Hound Zero/modules/Zone")
 
 local manage_outlines = mod.manage_outlines
 local manage_zone = mod.manage_zone

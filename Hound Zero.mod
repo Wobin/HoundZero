@@ -8,6 +8,6 @@ return {
 			mod_localization = "Hound Zero/scripts/mods/Hound Zero/Hound Zero_localization",
 		})
 	end,
-	version = "1.7",
+	version = "1.7.1",
 	packages = {},
 }
