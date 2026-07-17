@@ -37,15 +37,11 @@ mod.manage_zone = function()
     local world = Unit.world(unit)
 	local unit_position = Unit.local_position(unit, 1)
 
-	-- Create decal unit
 	local decal_unit = World.spawn_unit_ex(world, decal_path, nil, unit_position)
-    World.link_unit(world, decal_unit, 1, unit, 1)
-    
-	-- Set size of unit
+
 	local diameter = mod.radius * 2
 	Unit.set_local_scale(decal_unit, 1, Vector3(diameter, diameter, 1))
 
-	-- Set color of unit
 	local material_value = Quaternion.identity()
 	Quaternion.set_xyzw(material_value,
 		(mod:get("ring_colour_R") or 0) / 255,
@@ -54,7 +50,6 @@ mod.manage_zone = function()
 		0.5)
 	Unit.set_vector4_for_material(decal_unit, "projector", "particle_color", material_value, true)
 
-	-- Set low opacity
 	Unit.set_scalar_for_material(decal_unit, "projector", "color_multiplier", 0.5)
     
 	mod.decal = decal_unit 

@@ -1,10 +1,10 @@
 -- Mod: Hound Zero
 -- Author: Wobin
--- Date: 11/06/2026
--- Version: 1.7.1
+-- Date: 09/07/2026
+-- Version: 1.7.2
 
 local mod = get_mod("Hound Zero")
-mod.version = "1.7.1"
+mod.version = "1.7.2"
 
 mod:io_dofile("Hound Zero/scripts/mods/Hound Zero/modules/Outlines")
 mod:io_dofile("Hound Zero/scripts/mods/Hound Zero/modules/Zone")
@@ -20,6 +20,8 @@ local table_insert = table.insert
 local table_find_by_key = table.find_by_key
 local playerManager = Managers.player
 local unitLocalPosition = Unit.local_position
+local unitSetLocalPosition = Unit.set_local_position
+local unitIsValid = Unit.is_valid
 local managers_state = Managers.state
 local game_mode_manager = Managers.state.game_mode			
 local extension = ScriptUnit.extension
@@ -129,8 +131,11 @@ local manage_zone = mod.manage_zone
 local delta = 0
 
 
-mod.update = function(dt)    
+mod.update = function(dt)
     if not mod.correct_area then return end
+    if mod.zoned and mod.decal and unitIsValid(mod.decal) and mod.hound and unitIsValid(mod.hound) then
+        unitSetLocalPosition(mod.decal, 1, unitLocalPosition(mod.hound, 1))
+    end
     if delta > 0.5 then
         if not mod.radius then getRadius() end
         if mod:get("show_outline") and mod.player and 
@@ -147,7 +152,7 @@ mod.update = function(dt)
                 manage_zone()
             end
         else
-            if not mod.hasCharges() then mod.remove_zone() end
+            if not (mod.aiming or mod.hasCharges()) then mod.remove_zone() end
         end
         delta = 0
     else
