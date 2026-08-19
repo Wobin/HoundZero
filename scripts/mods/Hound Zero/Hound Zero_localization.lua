@@ -22,15 +22,9 @@ return {
 	outline_colour = {
 		en = "Outline colour",
 	},
-	outline_colour_R = { en = "Red" },
-	outline_colour_G = { en = "Green" },
-	outline_colour_B = { en = "Blue" },
 
 	ring_colour = {
 		en = "Ring colour",
 	},
-	ring_colour_R = { en = "Red" },
-	ring_colour_G = { en = "Green" },
-	ring_colour_B = { en = "Blue" },
 
 }

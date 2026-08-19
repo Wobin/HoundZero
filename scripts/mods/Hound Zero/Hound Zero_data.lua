@@ -1,4 +1,22 @@
 local mod = get_mod("Hound Zero")
+local function migrate_colour(id)
+	if mod:get(id) ~= nil then
+		return
+	end
+
+	local r = mod:get(id .. "_R")
+	local g = mod:get(id .. "_G")
+	local b = mod:get(id .. "_B")
+
+	if type(r) == "number" and type(g) == "number" and type(b) == "number" then
+		mod:set(id, { 255, r, g, b })
+	end
+end
+
+migrate_colour("outline_colour")
+migrate_colour("ring_colour")
+
+
 
 return {
 	name = mod:localize("mod_name"),
@@ -23,21 +41,15 @@ return {
 			},
 			{
 				setting_id = "outline_colour",
-				type = "group",
-				sub_widgets = {
-					{ setting_id = "outline_colour_R", type = "numeric", default_value = 0,   range = {0, 255} },
-					{ setting_id = "outline_colour_G", type = "numeric", default_value = 0,   range = {0, 255} },
-					{ setting_id = "outline_colour_B", type = "numeric", default_value = 255, range = {0, 255} },
-				},
+				type = "color",
+				default_value = { 255, 0, 0, 255 },
+				has_alpha = false,
 			},
 			{
 				setting_id = "ring_colour",
-				type = "group",
-				sub_widgets = {
-					{ setting_id = "ring_colour_R", type = "numeric", default_value = 0,   range = {0, 255} },
-					{ setting_id = "ring_colour_G", type = "numeric", default_value = 0,   range = {0, 255} },
-					{ setting_id = "ring_colour_B", type = "numeric", default_value = 255, range = {0, 255} },
-				},
+				type = "color",
+				default_value = { 255, 0, 0, 255 },
+				has_alpha = false,
 			},
 
 		},

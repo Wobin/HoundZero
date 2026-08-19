@@ -2,8 +2,6 @@ local mod = get_mod("Hound Zero")
 local decal_path = "content/levels/training_grounds/fx/decal_aoe_indicator"
 local package_path = "content/levels/training_grounds/missions/mission_tg_basic_combat_01"
 
-local Managers = Managers
-local package = Managers.package
 local Unit = Unit
 local World = World
 local Vector3 = Vector3
@@ -11,15 +9,19 @@ local Quaternion = Quaternion
 local HEALTH_ALIVE = HEALTH_ALIVE
 local is_valid = Unit.is_valid
 
+mod.init_zone = function()
+    if not mod.live_player or not mod.live_player() then return end
+    if mod.zone_loaded or mod:package_status(package_path) then return end
+    mod:load_package(package_path, function()
+        mod.zone_loaded = true
+    end)
+end
 
-mod.init_zone = function(has_loaded)
-    if not package:has_loaded(package_path) and not has_loaded then
-        package:load(package_path, "Hound Zero", function()
-            mod.init_zone(true)
-        end)
-        return
-    end    
-    mod.zone_loaded = true
+mod.release_zone_package = function()
+    mod.zone_loaded = false
+    if mod:package_status(package_path) then
+        mod:unload_package(package_path)
+    end
 end
 
 mod.manage_zone = function()
@@ -28,11 +30,11 @@ mod.manage_zone = function()
         mod.get_dog()
     end
     if mod.decal then mod.remove_zone() end
-    if not is_valid(mod.hound) then
+    if not mod.hound or not is_valid(mod.hound) then
         mod.hound = nil
         return
     end
-    
+
     local unit = mod.hound
     local world = Unit.world(unit)
 	local unit_position = Unit.local_position(unit, 1)
@@ -44,22 +46,25 @@ mod.manage_zone = function()
 
 	local material_value = Quaternion.identity()
 	Quaternion.set_xyzw(material_value,
-		(mod:get("ring_colour_R") or 0) / 255,
-		(mod:get("ring_colour_G") or 0) / 255,
-		(mod:get("ring_colour_B") or 255) / 255,
+		(mod.colour_channel("ring_colour", 1, 0)) / 255,
+		(mod.colour_channel("ring_colour", 2, 0)) / 255,
+		(mod.colour_channel("ring_colour", 3, 255)) / 255,
 		0.5)
 	Unit.set_vector4_for_material(decal_unit, "projector", "particle_color", material_value, true)
 
 	Unit.set_scalar_for_material(decal_unit, "projector", "color_multiplier", 0.5)
-    
-	mod.decal = decal_unit 
-    mod.zoned = true    
+
+	mod.decal = decal_unit
+    mod.zoned = true
+    mod.zoned_unit = unit
 end
 
-mod.remove_zone = function()    
-   if mod.decal and is_valid(mod.decal)  then
-        World.destroy_unit(Unit.world(mod.decal), mod.decal)                 
-        mod.decal = nil        
-    end
+mod.remove_zone = function()
+    local decal = mod.decal
+    mod.decal = nil
     mod.zoned = false
+    mod.zoned_unit = nil
+    if decal and is_valid(decal) then
+        World.destroy_unit(Unit.world(decal), decal)
+    end
 end

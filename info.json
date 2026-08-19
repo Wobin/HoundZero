@@ -1,0 +1,23 @@
+{
+	"name": "Hound Zero",
+	"description": "Hound Zero adds visual cues to show which enemies will be affected by Remote Detonation",
+	"version": "1.9.1",
+	"author": "Wobin",
+	"homepage": "https://www.nexusmods.com/warhammer40kdarktide/mods/589",
+	"source": "https://github.com/Wobin/HoundZero",
+	"funding": {
+		"kofi": "https://ko-fi.com/wobin_dwonderdog"
+	},
+	"nexusId": "589",
+	"localization": {
+		"zh-cn": {
+			"name": "高亮猎犬引爆范围",
+			"description": "为赛博獒犬添加视觉提示，显示哪些敌人将受到遥控引爆的影响"
+		}
+	},
+	"order": {
+		"require": [],
+		"this_after": [],
+		"this_before": []
+	}
+}
