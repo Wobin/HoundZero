@@ -71,7 +71,7 @@ end
 
 mod.manage_outlines = function(enemies)
         local system = get_outline_system()
-        if not system or not mod:get("show_outline") then return end
+        if not system or not mod.opts.show_outline then return end
 
         for unit, _ in pairs(outlined_units) do
             if not enemies[unit] then

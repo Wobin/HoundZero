@@ -26,6 +26,7 @@ end
 
 mod.manage_zone = function()
     if not mod.hound or not mod.zone_loaded then return end
+    if not mod.radius then return end
     if not HEALTH_ALIVE[mod.hound] or not is_valid(mod.hound) then
         mod.get_dog()
     end

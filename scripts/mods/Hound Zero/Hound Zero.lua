@@ -1,6 +1,6 @@
 -- Mod: Hound Zero
 -- Author: Wobin
--- Date: 20/08/2026
+-- Date: 23/08/2026
 
 local mod = get_mod("Hound Zero")
 
@@ -40,7 +40,19 @@ local CLASS = CLASS
 mod.player = nil
 mod.outline_visible = false
 
--- Defined before the modules load; both of them call it.
+mod.opts = {
+    show_outline = false,
+    show_zone = false,
+    show_while_charged = false,
+}
+local opts = mod.opts
+
+local function refresh_opts()
+    opts.show_outline = mod:get("show_outline") and true or false
+    opts.show_zone = mod:get("show_zone") and true or false
+    opts.show_while_charged = mod:get("show_while_charged") and true or false
+end
+
 local function live_player()
     local player = mod.player
     if player and not player.__deleted then
@@ -58,13 +70,16 @@ end
 mod:io_dofile("Hound Zero/scripts/mods/Hound Zero/modules/Outlines")
 mod:io_dofile("Hound Zero/scripts/mods/Hound Zero/modules/Zone")
 
+local enemy_units = {}
+
 local function find_enemies_in_radius(center, radius)
+    table.clear(enemy_units)
+
     local state_extension = managers_state.extension
     local side_system = state_extension and state_extension:system("side_system")
     local player_side = side_system and side_system:get_side_from_name("heroes")
-    if not player_side then return {} end
+    if not player_side then return enemy_units end
     local enemy_units_list = player_side:relation_units("enemy")
-    local enemy_units = {}
 
     for _, unit in ipairs(enemy_units_list) do
         if HEALTH_ALIVE[unit] and vector3(center, unitLocalPosition(unit, 1)) <= radius then
@@ -75,10 +90,18 @@ local function find_enemies_in_radius(center, radius)
 end
 
 local retrieve_profile = function()
-    local localplayer = playerManager:local_player_safe(1) or nil
+    local localplayer = playerManager:local_player_safe(1)
     if not localplayer then return end
+
     local profile = localplayer:profile()
-    mod.player = (profile and profile.archetype.name == "adamant" and profile.talents.adamant_whistle == 1) and localplayer or nil
+    local archetype = profile and profile.archetype
+    local talents = profile and profile.talents
+
+    if archetype and archetype.name == "adamant" and talents and talents.adamant_whistle == 1 then
+        mod.player = localplayer
+    else
+        mod.player = nil
+    end
 end
 
 local acceptable_locations = {}
@@ -89,6 +112,7 @@ acceptable_locations["expedition"] = true
 
 mod.on_all_mods_loaded = function()
     mod:info(mod.version)
+    refresh_opts()
     mod:init()
 end
 
@@ -100,6 +124,7 @@ mod.on_unload = function(exit_game)
     mod.hound = nil
     mod.radius = nil
     mod.aiming = nil
+    mod.correct_area = false
     mod.outline_visible = false
 end
 
@@ -112,6 +137,7 @@ mod.on_enabled = function(initial_call)
 end
 
 mod.on_setting_changed = function(setting_id)
+    refresh_opts()
     if not setting_id then return end
     if setting_id:find("^outline_colour") then
         if mod.refresh_outline_colour then mod.refresh_outline_colour() end
@@ -122,18 +148,24 @@ mod.on_setting_changed = function(setting_id)
 end
 
 mod.on_game_state_changed = function(status, sub_state_name)
-	if sub_state_name == "GameplayStateRun" and status == "enter" then
+    if sub_state_name ~= "GameplayStateRun" then return end
+
+    if status == "enter" then
         mod:init()
+    elseif status == "exit" then
+        mod.on_unload()
     end
-    if status == "exit" then mod.on_unload() end
 end
 
 mod.init = function()
+    refresh_opts()
     game_mode_manager = Managers.state.game_mode
     if game_mode_manager then
 	    if acceptable_locations[game_mode_manager:game_mode_name()] then
             mod.correct_area = true
-            delay(3):next(retrieve_profile):next(mod.get_dog):next(mod.init_zone)
+            retrieve_profile()
+            mod.get_dog()
+            mod.init_zone()
         else
             mod.correct_area = false
             mod.on_unload()
@@ -157,7 +189,7 @@ local getRadius = function()
 end
 
 mod.hasCharges = function()
-    if not mod:get("show_while_charged") then return false end
+    if not opts.show_while_charged then return false end
     local player_unit = live_player_unit()
     if not player_unit then return false end
     local ability_system = has_extension(player_unit, "ability_system")
@@ -182,12 +214,11 @@ mod.update = function(dt)
     if delta > 0.5 then
         if not mod.radius then getRadius() end
 
-        -- Cached once per tick; visibility_check reads it per outlined unit per FRAME.
         local visible = false
         if mod.aiming or mod.hasCharges() then visible = true end
         mod.outline_visible = visible
 
-        if mod:get("show_outline") and live_player() and visible
+        if opts.show_outline and live_player() and visible
             and mod.hound and unitIsValid(mod.hound) then
             local dog_position = unitLocalPosition(mod.hound, 1)
             manage_outlines(find_enemies_in_radius(dog_position, mod.radius))
@@ -195,12 +226,11 @@ mod.update = function(dt)
             mod.remove_all_outlines()
         end
 
-        -- The decal is spawned against a specific hound; a respawn gives a new unit.
         if mod.zoned and mod.zoned_unit ~= mod.hound then
             mod.remove_zone()
         end
         if not mod.zoned then
-            if mod:get("show_zone") and mod:get("show_while_charged") and mod.hasCharges() then
+            if opts.show_zone and opts.show_while_charged and mod.hasCharges() then
                 manage_zone()
             end
         else
@@ -219,7 +249,7 @@ actions["action_order_companion"] = false
 
 
 mod:hook_safe(CLASS.ActionHandler, "start_action", function(_, _, _, action_name, _, action_settings)
-    if not mod:get("show_while_charged") then
+    if not opts.show_while_charged then
         if not live_player() or not (actions[action_name] ~= nil and action_settings.ability_type == "grenade_ability") then return end
 
         mod.aiming = actions[action_name]
@@ -239,7 +269,7 @@ mod.get_dog = function()
     local player_unit = live_player_unit()
     if not player_unit then return end
     local companion_spawner_extension = has_extension(player_unit, "companion_spawner_system")
-    local spawned_units = companion_spawner_extension and companion_spawner_extension._spawned_units
+    local spawned_units = companion_spawner_extension and companion_spawner_extension:companion_units()
     local companion_unit = spawned_units and spawned_units[1]
 
     if companion_unit then
@@ -247,8 +277,19 @@ mod.get_dog = function()
     end
 end
 
+mod:hook_safe(CLASS.CompanionSpawnerExtension, "register_spawned_companion_unit", function(self, spawned_unit)
+    if not mod.correct_area or not spawned_unit then return end
+    if not self._is_local_unit then return end
+
+    if not live_player() then retrieve_profile() end
+    if not live_player() then return end
+
+    mod.hound = spawned_unit
+end)
+
 
 mod.on_settings_reset = function()
+    refresh_opts()
     if mod.refresh_outline_colour then mod.refresh_outline_colour() end
     mod.remove_all_outlines()
     mod.remove_zone()
