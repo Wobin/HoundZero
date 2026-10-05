@@ -1,6 +1,6 @@
 -- Mod: Hound Zero
 -- Author: Wobin
--- Date: 23/08/2026
+-- Date: 05/10/2026
 
 local mod = get_mod("Hound Zero")
 
@@ -97,7 +97,10 @@ local retrieve_profile = function()
     local archetype = profile and profile.archetype
     local talents = profile and profile.talents
 
-    if archetype and archetype.name == "adamant" and talents and talents.adamant_whistle == 1 then
+    local whistle = talents and talents.adamant_whistle
+    local whistle_tier = type(whistle) == "table" and whistle.tier or whistle
+
+    if archetype and archetype.name == "adamant" and type(whistle_tier) == "number" and whistle_tier > 0 then
         mod.player = localplayer
     else
         mod.player = nil
@@ -248,9 +251,11 @@ actions["action_order_companion"] = false
 
 
 
-mod:hook_safe(CLASS.ActionHandler, "start_action", function(_, _, _, action_name, _, action_settings)
+mod:hook_safe(CLASS.ActionHandler, "start_action", function(_, _, _, action_name, action_params, action_settings)
     if not opts.show_while_charged then
-        if not live_player() or not (actions[action_name] ~= nil and action_settings.ability_type == "grenade_ability") then return end
+        if not live_player() or actions[action_name] == nil then return end
+        local ability_type = (action_params and action_params.ability_type) or (action_settings and action_settings.ability_type)
+        if ability_type ~= "grenade_ability" then return end
 
         mod.aiming = actions[action_name]
 
